@@ -16,9 +16,9 @@ pygame.init()
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
-y, sr = librosa.load('Zedd - Clarity (feat. Foxes).wav')
-my_sound = pygame.mixer.Sound('Zedd - Clarity (feat. Foxes).wav')
-tempo, beatframes = librosa.beat.beat_track(y=y, sr=sr)
+# y, sr = librosa.load('Zedd - Clarity (feat. Foxes).wav')
+# my_sound = pygame.mixer.Sound('Zedd - Clarity (feat. Foxes).wav')
+# tempo, beatframes = librosa.beat.beat_track(y=y, sr=sr)
 # print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
 # print(tempo)
 
@@ -27,13 +27,51 @@ tempo, beatframes = librosa.beat.beat_track(y=y, sr=sr)
 VisionRunningMode = mp.tasks.vision.RunningMode
 DrawingUtil = mp.solutions.drawing_utils
 
+class Gesture:
+    """
+    A class to represent a random circle
+    enemy. It spawns randomly within 
+    the given bounds.
+    """
+    def __init__(self, screen_width=1200, screen_height=700):
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.x = 600
+        self.y  = 150
+        self.list_of_gestures = ["Closed_Fist", "Open_Palm", "Pointing_Up", "Thumb_Down", "Thumb_Up", "Victory", "ILoveYou"]
+        self.current_gesture = None
+    
+    
+    def update_gesture(self):
+        self.current_gesture = self.list_of_gestures[random.randint(0,6)]
+    def gesture_rn(self):
+        return self.current_gesture
+    def draw(self, image):
+        """
+        Enemy is drawn as a circle onto the image
+
+        Args:
+            image (Image): The image to draw the enemy onto
+        """
+        cv2.putText(image, self.current_gesture, (self.x, self.y), 1,  
+                   1, (0,0,255), 1, cv2.LINE_AA) 
+
+    def remove(self, image):
+        cv2.putText(image, None, (self.x, self.y), 1,  
+                   1, (0,0,255), 1, cv2.LINE_AA) 
+
+
+
       
 class Game:
     def __init__(self):
         # Load game elements
+        self.gesture = Gesture()
         self.accuracy = 100
         self.level = 0
-        self.tempo = tempo
+        self.score = 0
+        self.held_gesture = None
+        # self.tempo = tempo
 
 
         # Create the hand detector
@@ -44,6 +82,7 @@ class Game:
 
         # TODO: Load video
         self.video = cv2.VideoCapture(0)
+
 
     
     def draw_landmarks_on_hand(self, image):
@@ -56,51 +95,16 @@ class Game:
         results = self.detector.recognize(image)
         # Get a list of the landmarks
         if results.gestures:
-            top_gesture = results.gestures[0][0]
-            print(top_gesture.category_name)
+            self.held_gesture = results.gestures[0][0]
         
     
 
 
             
 
-#     # def check_enemy_kill(self, image, detection_result):
-#     #     """
-#     #     Draws a green circle on the index finger 
-#     #     and calls a method to check if we've intercepted
-#     #     with the enemy
-#     #     Args:
-#     #         image (Image): The image to draw on
-#     #         detection_result (HandLandmarkerResult): HandLandmarker detection results
-#     #     """
-#     #     # Get image details
-#     #     imageHeight, imageWidth = image.shape[:2]
-#     #     # Get a list of the landmarks
-#     #     hand_landmarks_list = detection_result.hand_landmarks
-        
-#     #     # Loop through the detected hands to visualize.
-#     #     for idx in range(len(hand_landmarks_list)):
-#     #         hand_landmarks = hand_landmarks_list[idx]
-#     #         finger = hand_landmarks[HandLandmarkPoints.INDEX_FINGER_TIP.value]
-#     #         thumb = hand_landmarks[HandLandmarkPoints.THUMB_TIP.value]
-#     #         pixelCoordinates = DrawingUtil._normalized_to_pixel_coordinates(finger.x, finger.y, imageWidth,  imageHeight)
-#     #         thumbCoordinates = DrawingUtil._normalized_to_pixel_coordinates(thumb.x, thumb.y, imageWidth,  imageHeight)
-#     #         if pixelCoordinates and self.level == 0:
-#     #             cv2.circle(image, (pixelCoordinates[0], pixelCoordinates[1]), 25, GREEN, 5)
-#     #             cv2.circle(image, (thumbCoordinates[0], thumbCoordinates[1]), 25, RED, 5)
-#     #             self.check_enemy_intercept(pixelCoordinates[0], pixelCoordinates[1], self.green_enemy, image)
-#     #             self.check_enemy_intercept(thumbCoordinates[0], thumbCoordinates[1], self.red_enemy, image)
-#     #         if pixelCoordinates and self.level == 1:
-#     #             cv2.circle(image, (pixelCoordinates[0], pixelCoordinates[1]), 25, GREEN, 5)
-#     #             for enemy in self.enemies:
-#     #                 self.check_enemy_intercept(pixelCoordinates[0], pixelCoordinates[1], enemy, image)
-#     #         if pixelCoordinates and thumbCoordinates and self.level == 2:
-#     #             cv2.circle(image, (pixelCoordinates[0], pixelCoordinates[1]), 25, GREEN, 5)
-#     #             cv2.circle(image, (thumbCoordinates[0], thumbCoordinates[1]), 25, RED, 5)
-#     #             if (self.check_enemy_intercept(pixelCoordinates[0], pixelCoordinates[1], self.green_enemy, image)) and (self.check_enemy_intercept(thumbCoordinates[0], thumbCoordinates[1], self.red_enemy, image)):
-#     #                 self.green_enemy.respawn()
-#     #                 self.red_enemy.respawn()
-#     #                 self.score +=1
+    def check_gesture(self, gesture):
+        if str(self.held_gesture) == gesture:
+            self.score += 100
 
     
     def run(self):
@@ -110,9 +114,10 @@ class Game:
         """    
         # TODO: Modify loop condition
         if self.level == 0:
-            my_sound.play()
+            starting_time = time.time()
+            # my_sound.play()
             while self.video.isOpened():
-                starting_time = time.time()
+               
                 # Get the current frame
                 frame = self.video.read()[1]
 
@@ -126,15 +131,22 @@ class Game:
 
                 # cv2.putText(image, str(self.score), (50,50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,color=GREEN,thickness=2)
                 self.draw_landmarks_on_hand(to_detect)
+                self.gesture.draw(image)
+                self.check_gesture(self.gesture.gesture_rn())
+                # current_time =time.time()
+                if (time.time() - starting_time >= 2):
+                    self.gesture.update_gesture()
+                    starting_time = time.time()
+                print(self.score)
 
 
-                # Change the color of the frame back
+
+                # Change the color of the frame bacqk
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 cv2.imshow('Gesture Tracking', image)
 
                 # Break the loop if the user presses 'q'
                 if (cv2.waitKey(50) & 0xFF == ord('q')):
-                    print(time.time() - starting_time)
                     break
             self.video.release()
             cv2.destroyAllWindows()
