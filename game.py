@@ -5,8 +5,6 @@ import cv2
 import random
 import time
 import librosa
-import math
-import urllib
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import pygame
@@ -16,12 +14,12 @@ pygame.init()
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
-# y, sr = librosa.load('Zedd - Clarity (feat. Foxes).wav')
-# my_sound = pygame.mixer.Sound('Zedd - Clarity (feat. Foxes).wav')
-# tempo, beatframes = librosa.beat.beat_track(y=y, sr=sr)
-# print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
-# print(tempo)
-
+y, sr = librosa.load('Zedd - Clarity (feat. Foxes).wav')
+my_sound = pygame.mixer.Sound('Zedd - Clarity (feat. Foxes).wav')
+tempo, beatframes = librosa.beat.beat_track(y=y, sr=sr)
+print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
+print(tempo)
+my_sound.set_volume(.2)
 
 # Library Constants
 VisionRunningMode = mp.tasks.vision.RunningMode
@@ -44,8 +42,13 @@ class Gesture:
     
     def update_gesture(self):
         self.current_gesture = self.list_of_gestures[random.randint(0,6)]
+
     def gesture_rn(self):
         return self.current_gesture
+
+    def clear_gesture(self):
+        self.current_gesture = None
+
     def draw(self, image):
         """
         Enemy is drawn as a circle onto the image
@@ -54,7 +57,7 @@ class Gesture:
             image (Image): The image to draw the enemy onto
         """
         cv2.putText(image, self.current_gesture, (self.x, self.y), 1,  
-                   1, (0,0,255), 1, cv2.LINE_AA) 
+                   5, (0,0,255), 3, cv2.LINE_AA) 
 
     def remove(self, image):
         cv2.putText(image, None, (self.x, self.y), 1,  
@@ -103,8 +106,9 @@ class Game:
             
 
     def check_gesture(self, gesture):
-        if str(self.held_gesture) == gesture:
-            self.score += 100
+        if self.held_gesture and self.held_gesture.category_name == gesture:
+            return True
+            
 
     
     def run(self):
@@ -115,7 +119,7 @@ class Game:
         # TODO: Modify loop condition
         if self.level == 0:
             starting_time = time.time()
-            # my_sound.play()
+            my_sound.play()
             while self.video.isOpened():
                
                 # Get the current frame
@@ -132,12 +136,13 @@ class Game:
                 # cv2.putText(image, str(self.score), (50,50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,color=GREEN,thickness=2)
                 self.draw_landmarks_on_hand(to_detect)
                 self.gesture.draw(image)
-                self.check_gesture(self.gesture.gesture_rn())
+                if(self.check_gesture(self.gesture.gesture_rn())):
+                    self.gesture.clear_gesture()
+                    self.score += 100
                 # current_time =time.time()
-                if (time.time() - starting_time >= 2):
+                elif (time.time() - starting_time >= 1):
                     self.gesture.update_gesture()
                     starting_time = time.time()
-                print(self.score)
 
 
 
@@ -150,6 +155,7 @@ class Game:
                     break
             self.video.release()
             cv2.destroyAllWindows()
+            print(self.score)
 
 
 if __name__ == "__main__":        
