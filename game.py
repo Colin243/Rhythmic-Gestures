@@ -20,17 +20,12 @@ tempo, beatframes = librosa.beat.beat_track(y=y, sr=sr)
 print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
 print(tempo)
 my_sound.set_volume(.2)
-
+length = 271
 # Library Constants
 VisionRunningMode = mp.tasks.vision.RunningMode
 DrawingUtil = mp.solutions.drawing_utils
 
 class Gesture:
-    """
-    A class to represent a random circle
-    enemy. It spawns randomly within 
-    the given bounds.
-    """
     def __init__(self, screen_width=1200, screen_height=700):
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -50,12 +45,6 @@ class Gesture:
         self.current_gesture = None
 
     def draw(self, image):
-        """
-        Enemy is drawn as a circle onto the image
-
-        Args:
-            image (Image): The image to draw the enemy onto
-        """
         cv2.putText(image, self.current_gesture, (self.x, self.y), 1,  
                    5, (0,0,255), 3, cv2.LINE_AA) 
 
@@ -88,17 +77,15 @@ class Game:
 
 
     
-    def draw_landmarks_on_hand(self, image):
-        """
-        Draws all the landmarks on the hand
-        Args:
-            image (Image): Image to draw on
-            detection_result (HandLandmarkerResult): HandLandmarker detection results
-        """
+    def draw_gestures(self, image):
         results = self.detector.recognize(image)
         # Get a list of the landmarks
         if results.gestures:
             self.held_gesture = results.gestures[0][0]
+
+    def display_score(self, image):
+        cv2.putText(image, str(self.score), (10, 10), 1,  
+                   2, (0,0,255), 3, cv2.LINE_AA) 
         
     
 
@@ -121,7 +108,7 @@ class Game:
             starting_time = time.time()
             my_sound.play()
             while self.video.isOpened():
-               
+                spawn_time = time.time()
                 # Get the current frame
                 frame = self.video.read()[1]
 
@@ -134,8 +121,9 @@ class Game:
 
 
                 # cv2.putText(image, str(self.score), (50,50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,color=GREEN,thickness=2)
-                self.draw_landmarks_on_hand(to_detect)
-                self.gesture.draw(image)
+                self.draw_gestures(to_detect)
+                if (spawn_time >= (length / tempo)):
+                    self.gesture.draw(image)
                 if(self.check_gesture(self.gesture.gesture_rn())):
                     self.gesture.clear_gesture()
                     self.score += 100
@@ -144,14 +132,13 @@ class Game:
                     self.gesture.update_gesture()
                     starting_time = time.time()
 
-
-
                 # Change the color of the frame bacqk
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 cv2.imshow('Gesture Tracking', image)
+                self.display_score(image)
 
                 # Break the loop if the user presses 'q'
-                if (cv2.waitKey(50) & 0xFF == ord('q')):
+                if (cv2.waitKey(50) & 0xFF == ord('q') or (time.time() - starting_time >= 273)):
                     break
             self.video.release()
             cv2.destroyAllWindows()
