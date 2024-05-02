@@ -84,18 +84,14 @@ class Game:
             self.held_gesture = results.gestures[0][0]
 
     def display_score(self, image):
-        cv2.putText(image, str(self.score), (10, 10), 1,  
+        cv2.putText(image, str(self.score), (25, 25), 1,  
                    2, (0,0,255), 3, cv2.LINE_AA) 
         
     
-
-
-            
-
     def check_gesture(self, gesture):
         if self.held_gesture and self.held_gesture.category_name == gesture:
             return True
-            
+          
 
     
     def run(self):
@@ -117,9 +113,8 @@ class Game:
                 image = cv2.flip(image, 1)
 
                 to_detect = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+                self.display_score(image)
                 
-
-
                 # cv2.putText(image, str(self.score), (50,50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,color=GREEN,thickness=2)
                 self.draw_gestures(to_detect)
                 if (spawn_time >= (length / tempo)):
@@ -127,7 +122,6 @@ class Game:
                 if(self.check_gesture(self.gesture.gesture_rn())):
                     self.gesture.clear_gesture()
                     self.score += 100
-                # current_time =time.time()
                 elif (time.time() - starting_time >= 1):
                     self.gesture.update_gesture()
                     starting_time = time.time()
@@ -135,7 +129,6 @@ class Game:
                 # Change the color of the frame bacqk
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 cv2.imshow('Gesture Tracking', image)
-                self.display_score(image)
 
                 # Break the loop if the user presses 'q'
                 if (cv2.waitKey(50) & 0xFF == ord('q') or (time.time() - starting_time >= 273)):
