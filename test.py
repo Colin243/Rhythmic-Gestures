@@ -20,8 +20,9 @@ scope = "user-library-read"
 
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 
-print(sp.search('BEVERLY', limit=1))
-#print(sp.audio_features('https://open.spotify.com/track/03hl08vyDaBCQxQr8X6HXg?si=b9867a04d8994add')[0]['tempo'])
+#print(sp.search('BEVERLY', limit=1))
+print(sp.audio_features('https://open.spotify.com/track/03hl08vyDaBCQxQr8X6HXg?si=b9867a04d8994add')[0]['tempo'])
+print(sp.audio_features('https://open.spotify.com/track/03hl08vyDaBCQxQr8X6HXg?si=b9867a04d8994add')[0]['duration_ms'] / 1000)
 
 
 

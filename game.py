@@ -21,7 +21,6 @@ print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
 print(tempo)
 my_sound.set_volume(.2)
 length = 271
-# Library Constants
 VisionRunningMode = mp.tasks.vision.RunningMode
 DrawingUtil = mp.solutions.drawing_utils
 
@@ -66,20 +65,17 @@ class Game:
         # self.tempo = tempo
 
 
-        # Create the hand detector
         base_options = python.BaseOptions(model_asset_path='data/gesture_recognizer.task')
         options = vision.GestureRecognizerOptions(base_options=base_options)
         self.detector = vision.GestureRecognizer.create_from_options(options)
         
 
-        # TODO: Load video
         self.video = cv2.VideoCapture(0)
 
 
     
     def draw_gestures(self, image):
         results = self.detector.recognize(image)
-        # Get a list of the landmarks
         if results.gestures:
             self.held_gesture = results.gestures[0][0]
 
@@ -105,17 +101,14 @@ class Game:
             my_sound.play()
             while self.video.isOpened():
                 spawn_time = time.time()
-                # Get the current frame
                 frame = self.video.read()[1]
 
-                # Convert it to an RGB image
                 image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 image = cv2.flip(image, 1)
 
                 to_detect = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
                 self.display_score(image)
                 
-                # cv2.putText(image, str(self.score), (50,50), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,color=GREEN,thickness=2)
                 self.draw_gestures(to_detect)
                 if (spawn_time >= (length / tempo)):
                     self.gesture.draw(image)
@@ -126,7 +119,7 @@ class Game:
                     self.gesture.update_gesture()
                     starting_time = time.time()
 
-                # Change the color of the frame bacqk
+
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 cv2.imshow('Gesture Tracking', image)
 
