@@ -14,8 +14,8 @@ pygame.init()
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
-y, sr = librosa.load('Zedd - Claity (feat. Foxes).wav')
-my_sound = pygame.mixer.Sound('Zedd - Claity (feat. Foxes).wav')
+y, sr = librosa.load('Zedd - Clarity (feat. Foxes).wav')
+my_sound = pygame.mixer.Sound('Zedd - Clarity (feat. Foxes).wav')
 tempo, beatframes = librosa.beat.beat_track(y=y, sr=sr)
 print('Estimated tempo: {:.2f} beats per minute'.format(tempo))
 print(tempo)
@@ -45,11 +45,11 @@ class Gesture:
 
     def draw(self, image):
         cv2.putText(image, self.current_gesture, (self.x, self.y), 1,  
-                   5, (0,0,255), 3, cv2.LINE_AA) 
+                   5, (0, 255,0), 3, cv2.LINE_AA) 
 
     def remove(self, image):
         cv2.putText(image, None, (self.x, self.y), 1,  
-                   1, (0,0,255), 1, cv2.LINE_AA) 
+                   1, (0,255,0), 1, cv2.LINE_AA) 
 
 
 
